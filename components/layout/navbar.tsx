@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { Menu, X } from "lucide-react"
+import { Menu, X, LogOut } from "lucide-react"
 
 const navLinks = [
     { name: "About", href: "/about" },
@@ -16,6 +17,7 @@ const navLinks = [
 
 const Navbar = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+    const { data: session, status } = useSession()
 
     return (
         <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -45,14 +47,51 @@ const Navbar = () => {
                 {/* Right side actions */}
                 <div className="flex flex-1 items-center justify-end space-x-2">
                     <ThemeToggle />
-                    <div className="hidden md:flex items-center space-x-2">
-                        <Link href="/login">
-                            <Button variant="ghost" size="sm">Login</Button>
-                        </Link>
-                        <Link href="/join">
-                            <Button size="sm">Join Us</Button>
-                        </Link>
-                    </div>
+
+                    {status === "loading" ? (
+                        <div className="hidden md:flex items-center space-x-2">
+                            <div className="h-8 w-20 bg-muted animate-pulse rounded" />
+                        </div>
+                    ) : session?.user ? (
+                        <div className="hidden md:flex items-center space-x-3">
+                            {/* User Avatar */}
+                            <div className="flex items-center space-x-2">
+                                {session.user.image ? (
+                                    <img
+                                        src={session.user.image}
+                                        alt={session.user.name || "User"}
+                                        className="h-8 w-8 rounded-full"
+                                    />
+                                ) : (
+                                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                        <span className="text-sm font-medium text-primary">
+                                            {session.user.name?.[0] || "U"}
+                                        </span>
+                                    </div>
+                                )}
+                                <span className="text-sm font-medium">
+                                    {session.user.name}
+                                </span>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => signOut({ callbackUrl: "/" })}
+                            >
+                                <LogOut className="h-4 w-4 mr-1" />
+                                Logout
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="hidden md:flex items-center space-x-2">
+                            <Link href="/login">
+                                <Button variant="ghost" size="sm">Login</Button>
+                            </Link>
+                            <Link href="/join">
+                                <Button size="sm">Join Us</Button>
+                            </Link>
+                        </div>
+                    )}
 
                     {/* Mobile menu button */}
                     <Button
@@ -88,12 +127,48 @@ const Navbar = () => {
                             ))}
                         </nav>
                         <div className="flex flex-col space-y-2 pt-4 border-t">
-                            <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                                <Button variant="ghost" className="w-full justify-start">Login</Button>
-                            </Link>
-                            <Link href="/join" onClick={() => setMobileMenuOpen(false)}>
-                                <Button className="w-full">Join Us</Button>
-                            </Link>
+                            {session?.user ? (
+                                <>
+                                    <div className="flex items-center space-x-2 py-2">
+                                        {session.user.image ? (
+                                            <img
+                                                src={session.user.image}
+                                                alt={session.user.name || "User"}
+                                                className="h-8 w-8 rounded-full"
+                                            />
+                                        ) : (
+                                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                                <span className="text-sm font-medium text-primary">
+                                                    {session.user.name?.[0] || "U"}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <span className="text-sm font-medium">
+                                            {session.user.name}
+                                        </span>
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        className="w-full justify-start"
+                                        onClick={() => {
+                                            setMobileMenuOpen(false)
+                                            signOut({ callbackUrl: "/" })
+                                        }}
+                                    >
+                                        <LogOut className="h-4 w-4 mr-2" />
+                                        Logout
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                                        <Button variant="ghost" className="w-full justify-start">Login</Button>
+                                    </Link>
+                                    <Link href="/join" onClick={() => setMobileMenuOpen(false)}>
+                                        <Button className="w-full">Join Us</Button>
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

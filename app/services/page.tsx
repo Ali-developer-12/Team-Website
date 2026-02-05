@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Monitor, Server, Shield } from "lucide-react"
 
@@ -35,7 +36,9 @@ export default function ServicesPage() {
 
             <section className="container py-12 md:py-24 mx-auto text-center">
                 <h2 className="text-3xl font-bold mb-4">Ready to start?</h2>
-                <Button size="lg">Contact Us</Button>
+                <Link href="/contact">
+                    <Button size="lg">Contact Us</Button>
+                </Link>
             </section>
         </div>
     )

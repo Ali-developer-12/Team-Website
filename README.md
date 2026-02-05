@@ -9,7 +9,7 @@ A modern, full-stack website for a verified developer organization built with Ne
 
 ## 🚀 Live Demo
 
-> Coming soon - Will be deployed on Vercel
+**[https://team-website-sigma.vercel.app](https://team-website-sigma.vercel.app)**
 
 ## ✨ Features
 
@@ -17,14 +17,15 @@ A modern, full-stack website for a verified developer organization built with Ne
 
 | Feature | Description |
 |---------|-------------|
-| **Home Page** | Hero section with gradient effects, stats, and features grid |
+| **Home Page** | Hero section with gradient effects, stats, and session-aware CTAs |
 | **About Page** | Team section showcasing 8 developers with portfolio links |
-| **Services Page** | Company services overview |
+| **Services Page** | Company services overview with working contact button |
 | **Blog** | Blog listing and detail pages |
 | **Jobs** | Job listings with detail pages and application forms |
 | **Developer Profiles** | Individual developer profile pages |
 | **Contact Page** | Contact form with validation |
-| **Authentication UI** | Login and Join/Signup pages |
+| **GitHub OAuth** | Full authentication with NextAuth.js v5 + GitHub |
+| **Session Handling** | User avatar, name, and logout in navbar |
 | **Dark/Light Theme** | Theme toggle with system preference detection |
 | **Mobile Navigation** | Responsive hamburger menu |
 | **Footer** | Navigation links and social icons |
@@ -34,7 +35,6 @@ A modern, full-stack website for a verified developer organization built with Ne
 | Feature | Status |
 |---------|--------|
 | Database Setup | Prisma schema ready, needs migration |
-| OAuth Authentication | NextAuth configured, needs provider setup |
 | Contact Form Backend | Needs email service integration |
 | Dynamic Blog Posts | Currently using placeholder data |
 | Dynamic Job Listings | Currently using placeholder data |

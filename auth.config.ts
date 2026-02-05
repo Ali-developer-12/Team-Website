@@ -1,20 +1,12 @@
 import type { NextAuthConfig } from "next-auth"
-import Credentials from "next-auth/providers/credentials"
 import GitHub from "next-auth/providers/github"
 
 export default {
     providers: [
-        GitHub,
-        Credentials({
-            credentials: {
-                email: { label: "Email", type: "email" },
-                password: { label: "Password", type: "password" }
-            },
-            authorize: async (credentials) => {
-                // Logic to verify user
-                return null
-            }
-        })
+        GitHub({
+            clientId: process.env.AUTH_GITHUB_ID,
+            clientSecret: process.env.AUTH_GITHUB_SECRET,
+        }),
     ],
     pages: {
         signIn: "/login",
@@ -30,11 +22,16 @@ export default {
             return token
         },
         session({ session, token }) {
-            if (session.user && token.id) {
-                session.user.id = token.id as string
-                session.user.role = token.role as any
+            if (session.user) {
+                if (token.id) {
+                    session.user.id = token.id as string
+                }
+                if (token.role) {
+                    session.user.role = token.role as "ADMIN" | "EDITOR" | "AUTHOR" | "DEVELOPER" | "USER"
+                }
             }
             return session
         }
     }
 } satisfies NextAuthConfig
+

@@ -1,8 +1,13 @@
+"use client"
+
 import Link from "next/link"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles } from "lucide-react"
 
 export function Hero() {
+    const { data: session } = useSession()
+
     return (
         <section className="relative overflow-hidden">
             {/* Background gradient effects */}
@@ -38,19 +43,37 @@ export function Hero() {
                     We are a collective of vetted engineering talent dedicated to high-quality software delivery and open-source contributions.
                 </p>
 
-                {/* CTA Buttons */}
+                {/* CTA Buttons - Changes based on session */}
                 <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                    <Link href="/join">
-                        <Button size="lg" className="gap-2 text-base px-8">
-                            Get Started
-                            <ArrowRight className="h-4 w-4" />
-                        </Button>
-                    </Link>
-                    <Link href="/about">
-                        <Button variant="outline" size="lg" className="text-base px-8">
-                            Learn More
-                        </Button>
-                    </Link>
+                    {session ? (
+                        <>
+                            <Link href="/jobs">
+                                <Button size="lg" className="gap-2 text-base px-8">
+                                    View Jobs
+                                    <ArrowRight className="h-4 w-4" />
+                                </Button>
+                            </Link>
+                            <Link href="/services">
+                                <Button variant="outline" size="lg" className="text-base px-8">
+                                    Our Services
+                                </Button>
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <Link href="/join">
+                                <Button size="lg" className="gap-2 text-base px-8">
+                                    Get Started
+                                    <ArrowRight className="h-4 w-4" />
+                                </Button>
+                            </Link>
+                            <Link href="/about">
+                                <Button variant="outline" size="lg" className="text-base px-8">
+                                    Learn More
+                                </Button>
+                            </Link>
+                        </>
+                    )}
                 </div>
 
                 {/* Stats */}
@@ -72,4 +95,5 @@ export function Hero() {
         </section>
     )
 }
+
 
