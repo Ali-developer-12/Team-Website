@@ -25,6 +25,10 @@ export default {
                 if (user.id) {
                     token.id = user.id
                 }
+                // @ts-ignore
+                if (user.isAdmin) {
+                    token.isAdmin = true
+                }
             }
             return token
         },
@@ -34,7 +38,11 @@ export default {
                     session.user.id = token.id as string
                 }
                 if (token.role) {
-                    session.user.role = token.role as "ADMIN" | "EDITOR" | "AUTHOR" | "DEVELOPER" | "USER"
+                    session.user.role = token.role as "ADMIN" | "EDITOR" | "AUTHOR" | "DEVELOPER" | "USER" | "SUPER_ADMIN" | "CONTENT_ADMIN" | "TEAM_ADMIN"
+                }
+                if (token.isAdmin) {
+                    // @ts-ignore
+                    session.user.isAdmin = token.isAdmin as boolean
                 }
             }
             return session

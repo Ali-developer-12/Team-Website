@@ -38,68 +38,13 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
-model Profile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bio         String?
-  title       String?
-  website     String?
-  github      String?
-  twitter     String?
-  linkedin    String?
-  skills      String[]
-  isVerified  Boolean  @default(false)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
-model Post {
-  id        String     @id @default(cuid())
-  title     String
-  slug      String     @unique
-  content   String     @db.Text
-  excerpt   String?
-  image     String?
-  status    PostStatus @default(DRAFT)
-  authorId  String
-  author    User       @relation(fields: [authorId], references: [id])
 
-  publishedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
 
-model Job {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  description String   @db.Text
-  location    String?
-  type        String?
-  salary      String?
-  isActive    Boolean  @default(true)
-  applications Application[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
-model Application {
-  id        String   @id @default(cuid())
-  jobId     String
-  job       Job      @relation(fields: [jobId], references: [id])
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  status    String   @default("PENDING")
-  
-  resumeUrl   String?
-  coverLetter String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
 model Account {
   id                 String  @id @default(cuid())
@@ -128,12 +73,190 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
 
-  @@unique([identifier, token])
+// ... existing imports ...
+
+// User Roles & Enums
+enum AdminRole {
+  SUPER_ADMIN
+  CONTENT_ADMIN
+  TEAM_ADMIN
+}
+
+enum AdminStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  DEACTIVATED
+}
+
+// Admin User Model (Separate from Public Users)
+model AdminUser {
+  id                  String      @id @default(cuid())
+  username            String      @unique
+  email               String      @unique
+  passwordHash        String
+  role                AdminRole   @default(CONTENT_ADMIN)
+  status              AdminStatus @default(PENDING)
+  isApproved          Boolean     @default(false)
+  failedLoginAttempts Int         @default(0)
+  lockedUntil         DateTime?
+  
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  auditLogs           AdminAuditLog[]
+  posts               Post[]
+}
+
+// Admin Audit Log
+model AdminAuditLog {
+  id        String    @id @default(cuid())
+  action    String
+  resource  String
+  details   String?
+  ipAddress String?
+  adminId   String
+  admin     AdminUser @relation(fields: [adminId], references: [id])
+  timestamp DateTime  @default(now())
+}
+
+// Content Management - Blog
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  posts       Post[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  posts     Post[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Content Management - Services
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  icon        String?  // URL or icon name
+  price       String?
+  features    String[] // List of features
+  active      Boolean  @default(true)
+  order       Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Updated Post Model
+model Post {
+  id             String     @id @default(cuid())
+  title          String
+  slug           String     @unique
+  content        String     @db.Text
+  excerpt        String?
+  image          String?
+  status         PostStatus @default(DRAFT)
+  
+  // SEO Fields
+  seoTitle       String?
+  seoDescription String?
+  keywords       String[]
+  
+  // Analytics
+  views          Int        @default(0)
+  shares         Int        @default(0)
+
+  // Relations
+  authorId       String?
+  author         User?      @relation(fields: [authorId], references: [id])
+  
+  adminAuthorId  String?
+  adminAuthor    AdminUser? @relation(fields: [adminAuthorId], references: [id])
+  
+  categoryId     String?
+  category       Category?  @relation(fields: [categoryId], references: [id])
+  tags           Tag[]
+
+  publishedAt    DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+// Updated Job Model
+enum JobStatus {
+  OPEN
+  CLOSED
+  DRAFT
+}
+
+enum ApplicationStatus {
+  NEW
+  REVIEWED
+  INTERVIEW
+  OFFER
+  HIRED
+  REJECTED
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  description String    @db.Text
+  location    String?
+  type        String?
+  salary      String?
+  isActive    Boolean   @default(true)
+  status      JobStatus @default(OPEN)
+  
+  applications Application[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Application {
+  id          String            @id @default(cuid())
+  jobId       String
+  job         Job               @relation(fields: [jobId], references: [id])
+  userId      String
+  user        User              @relation(fields: [userId], references: [id])
+  status      ApplicationStatus @default(NEW)
+  
+  resumeUrl   String?
+  coverLetter String?
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+// Updated Profile (Team)
+model Profile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio         String?
+  title       String?
+  website     String?
+  github      String?
+  twitter     String?
+  linkedin    String?
+  skills      String[]
+  isVerified  Boolean  @default(false)
+  
+  displayOrder Int     @default(0) // For Drag & Drop ordering
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Contact {
