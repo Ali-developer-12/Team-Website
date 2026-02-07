@@ -30,6 +30,7 @@ A modern, full-stack website for a verified developer organization built with Ne
 | **Advanced Security** | Device-restricted access (Mobile/PC) and Role-based control |
 | **GitHub + Google OAuth** | Full authentication with NextAuth.js v5 |
 | **Theme System** | Dark/Light mode with system preference detection |
+| **Performance** | Skeleton loaders, granular loading states, and optimized images (LCP/CLS) |
 
 ### 🔧 Remaining
 

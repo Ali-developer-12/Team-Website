@@ -30,6 +30,7 @@ export default function AdminLayout({
         { href: "/admin-$ecret-P@nel/team", label: "Team", icon: Users },
         { href: "/admin-$ecret-P@nel/jobs", label: "Jobs", icon: Briefcase },
         { href: "/admin-$ecret-P@nel/contact", label: "Contact", icon: MessageSquare },
+        { href: "/admin-$ecret-P@nel/chat", label: "Team Chat", icon: MessageSquare },
     ];
 
     return (
@@ -52,8 +53,8 @@ export default function AdminLayout({
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                                        ? "bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
-                                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                                    ? "bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
+                                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
                                     }`}
                             >
                                 <Icon className="w-5 h-5" />

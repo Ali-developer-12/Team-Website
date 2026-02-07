@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -76,10 +77,12 @@ export function Team({ members }: { members: TeamMember[] }) {
                             {/* Avatar */}
                             <div className="relative h-24 w-24 overflow-hidden rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
                                 {member.profile?.github ? (
-                                    <img
+                                    <Image
                                         src={`https://github.com/${member.profile.github}.png`}
                                         alt={member.name || 'Team Member'}
-                                        className="h-full w-full object-cover"
+                                        fill
+                                        className="object-cover"
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     />
                                 ) : (
                                     <span className="text-2xl font-bold text-primary">

@@ -249,10 +249,18 @@ model ApprovedAdmin {
   @@map("approved_admins")
 }
 
+
 model PendingRequest {
   id          Int      @id @default(autoincrement())
   email       String   @unique
   requestedAt DateTime @default(now()) @map("requested_at")
 
   @@map("pending_requests")
+}
+
+model AdminMessage {
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  senderEmail String
+  createdAt   DateTime @default(now())
 }

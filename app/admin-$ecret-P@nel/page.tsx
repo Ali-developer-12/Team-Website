@@ -18,11 +18,16 @@ export default function secretLoginPage() {
         setError('');
         setMessage('');
 
+        // Client-side detection for Mobile/Desktop Mode
+        // "Desktop Mode" on mobile often sends a desktop UA, but screen size and touch points betray it.
+        const isMobileDevice = /Mobi|Android|iPhone/i.test(navigator.userAgent) ||
+            (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+
         try {
             const res = await fetch('/api/admin/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ email, password, isClientMobile: isMobileDevice }),
             });
 
             const data = await res.json();

@@ -42,13 +42,13 @@ export async function POST(req: Request) {
                     let adminRecord = existing;
 
                     if (!existing) {
-                        // Create new admin logic (default to DESKTOP, but for specific user set MOBILE)
+                        // Create new admin logic (default to DESKTOP, but for specific user set ANY)
                         const isMainAdmin = email === 'mabdulrasheedtalal@gmail.com';
                         adminRecord = await prisma.approvedAdmin.create({
                             data: {
                                 email,
                                 approvedBy: 'system',
-                                allowedDevice: isMainAdmin ? 'MOBILE' : 'DESKTOP'
+                                allowedDevice: isMainAdmin ? 'ANY' : 'DESKTOP'
                             }
                         });
                     }
@@ -56,17 +56,18 @@ export async function POST(req: Request) {
                     // Enforce Device Restriction
                     if (adminRecord) {
                         // Update this specific user if not set (temporary fix for existing records)
-                        if (email === 'mabdulrasheedtalal@gmail.com' && adminRecord.allowedDevice !== 'MOBILE') {
+                        if (email === 'mabdulrasheedtalal@gmail.com' && adminRecord.allowedDevice !== 'ANY') {
                             adminRecord = await prisma.approvedAdmin.update({
                                 where: { email },
-                                data: { allowedDevice: 'MOBILE' }
+                                data: { allowedDevice: 'ANY' }
                             });
                         }
 
-                        if (adminRecord.allowedDevice === 'MOBILE' && !isMobile) {
+                        if (adminRecord.allowedDevice === 'ANY') {
+                            // Access allowed from anywhere
+                        } else if (adminRecord.allowedDevice === 'MOBILE' && !isMobile) {
                             return NextResponse.json({ success: false, message: 'Access Denied: You can only access from Mobile.' }, { status: 403 });
-                        }
-                        if (adminRecord.allowedDevice === 'DESKTOP' && isMobile) {
+                        } else if (adminRecord.allowedDevice === 'DESKTOP' && isMobile) {
                             return NextResponse.json({ success: false, message: 'Access Denied: You can only access from PC/Laptop.' }, { status: 403 });
                         }
                     }
@@ -95,11 +96,15 @@ export async function POST(req: Request) {
                 const userAgent = (req.headers.get('user-agent') || '').toLowerCase();
                 const isMobile = /mobile|android|iphone|ipad|ipod/.test(userAgent);
 
-                if (isApproved.allowedDevice === 'MOBILE' && !isMobile) {
+                const { isClientMobile } = body;
+                const effectiveMobile = isMobile || (isClientMobile === true);
+
+                if (isApproved.allowedDevice === 'ANY') {
+                    // Access allowed from anywhere
+                } else if (isApproved.allowedDevice === 'MOBILE' && !effectiveMobile) {
                     return NextResponse.json({ success: false, message: 'Access Denied: You can only access from Mobile.' }, { status: 403 });
-                }
-                if (isApproved.allowedDevice === 'DESKTOP' && isMobile) {
-                    return NextResponse.json({ success: false, message: 'Access Denied: You can only access from PC/Laptop.' }, { status: 403 });
+                } else if (isApproved.allowedDevice === 'DESKTOP' && effectiveMobile) {
+                    return NextResponse.json({ success: false, message: 'Access Denied: You can only access from PC/Laptop. Using Desktop Mode on Mobile is not allowed.' }, { status: 403 });
                 }
 
                 await createAdminSession(email);
