@@ -1,0 +1,49 @@
+
+> team-website@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.241.103:3000
+- Environments: .env.local, .env
+
+✓ Starting...
+✓ Ready in 1257ms
+ GET /admin-$ecret-P@nel 200 in 1195ms (compile: 687ms, render: 508ms)
+ GET /api/auth/session 200 in 1349ms (compile: 1301ms, render: 48ms)
+ GET /api/auth/session 200 in 50ms (compile: 32ms, render: 17ms)
+Admin login attempt: adminaliraza.dev.crusader@gmail.com from ::1
+Debug: INITIAL_PASSWORD length = 22
+Debug: APPROVAL_PASSWORD length = 21
+Debug: Submitted password length = 35
+ POST /api/admin/auth/login 401 in 1969ms (compile: 1922ms, render: 48ms)
+Admin login attempt: aliraza.dev.crusader@gmail.com from ::1
+Debug: INITIAL_PASSWORD length = 22
+Debug: APPROVAL_PASSWORD length = 21
+Debug: Submitted password length = 22
+Admin login error: Error [PrismaClientInitializationError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].approvedAdmin.findUnique()` invocation in
+/home/ali-hacker-1214/Web development/Team-Website/.next/dev/server/chunks/[root-of-the-server]__4ad9866c._.js:233:171
+
+  230 if (INITIAL_ADMIN_EMAILS.includes(email)) {
+  231     if (password === INITIAL_PASSWORD) {
+  232         // Verify they are in approved_admins
+→ 233         let admin = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].approvedAdmin.findUnique(
+Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 5)
+    at <unknown> (app/api/admin/auth/login/route.ts:31:56)
+    at async POST (app/api/admin/auth/login/route.ts:31:29)
+  29 |             if (password === INITIAL_PASSWORD) {
+  30 |                 // Verify they are in approved_admins
+> 31 |                 let admin = await prisma.approvedAdmin.findUnique({ where: { email } });
+     |                                                        ^
+  32 |
+  33 |                 // If not in DB yet (should have been seeded), add them
+  34 |                 if (!admin) { {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}
+ POST /api/admin/auth/login 500 in 10.6s (compile: 47ms, render: 10.5s)
+  Reload env: .env.local
+ GET /admin-$ecret-P@nel 200 in 415ms (compile: 210ms, render: 205ms)
+  Reload env: .env
+ GET /admin-$ecret-P@nel 200 in 257ms (compile: 155ms, render: 102ms)

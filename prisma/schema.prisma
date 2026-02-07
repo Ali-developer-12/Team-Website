@@ -38,68 +38,13 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
-model Profile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bio         String?
-  title       String?
-  website     String?
-  github      String?
-  twitter     String?
-  linkedin    String?
-  skills      String[]
-  isVerified  Boolean  @default(false)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
-model Post {
-  id        String     @id @default(cuid())
-  title     String
-  slug      String     @unique
-  content   String     @db.Text
-  excerpt   String?
-  image     String?
-  status    PostStatus @default(DRAFT)
-  authorId  String
-  author    User       @relation(fields: [authorId], references: [id])
 
-  publishedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
 
-model Job {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  description String   @db.Text
-  location    String?
-  type        String?
-  salary      String?
-  isActive    Boolean  @default(true)
-  applications Application[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
-model Application {
-  id        String   @id @default(cuid())
-  jobId     String
-  job       Job      @relation(fields: [jobId], references: [id])
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  status    String   @default("PENDING")
-  
-  resumeUrl   String?
-  coverLetter String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
 model Account {
   id                 String  @id @default(cuid())
@@ -128,12 +73,148 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
 
-  @@unique([identifier, token])
+// ... existing imports ...
+
+// Enums and models removed as they are replaced by the new Admin system at the end of this file.
+
+
+// Content Management - Blog
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  posts       Post[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  posts     Post[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Content Management - Services
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  icon        String?  // URL or icon name
+  price       String?
+  features    String[] // List of features
+  active      Boolean  @default(true)
+  order       Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Updated Post Model
+model Post {
+  id             String     @id @default(cuid())
+  title          String
+  slug           String     @unique
+  content        String     @db.Text
+  excerpt        String?
+  image          String?
+  status         PostStatus @default(DRAFT)
+  
+  // SEO Fields
+  seoTitle       String?
+  seoDescription String?
+  keywords       String[]
+  
+  // Analytics
+  views          Int        @default(0)
+  shares         Int        @default(0)
+
+  // Relations
+  authorId       String?
+  author         User?      @relation(fields: [authorId], references: [id])
+  
+  adminAuthorId  Int?
+  adminAuthor    ApprovedAdmin? @relation(fields: [adminAuthorId], references: [id])
+  
+  categoryId     String?
+  category       Category?  @relation(fields: [categoryId], references: [id])
+  tags           Tag[]
+
+  publishedAt    DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+// Job Model
+enum JobStatus {
+  OPEN
+  CLOSED
+  DRAFT
+}
+
+enum ApplicationStatus {
+  NEW
+  REVIEWED
+  INTERVIEW
+  OFFER
+  HIRED
+  REJECTED
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  description String    @db.Text
+  location    String?
+  type        String?
+  salary      String?
+  isActive    Boolean   @default(true)
+  status      JobStatus @default(OPEN)
+  
+  applications Application[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Application {
+  id          String            @id @default(cuid())
+  jobId       String
+  job         Job               @relation(fields: [jobId], references: [id])
+  userId      String
+  user        User              @relation(fields: [userId], references: [id])
+  status      ApplicationStatus @default(NEW)
+  
+  resumeUrl   String?
+  coverLetter String?
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+// Profile (Team)
+model Profile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio         String?
+  title       String?
+  website     String?
+  github      String?
+  twitter     String?
+  linkedin    String?
+  skills      String[]
+  isVerified  Boolean  @default(false)
+  
+  displayOrder Int     @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Contact {
@@ -147,3 +228,23 @@ model Contact {
   createdAt DateTime @default(now())
 }
 
+// SIMPLE ADMIN SYSTEM
+model ApprovedAdmin {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  approvedBy  String?  @map("approved_by")
+  approvedAt  DateTime @default(now()) @map("approved_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  posts       Post[]
+
+  @@map("approved_admins")
+}
+
+model PendingRequest {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  requestedAt DateTime @default(now()) @map("requested_at")
+
+  @@map("pending_requests")
+}
