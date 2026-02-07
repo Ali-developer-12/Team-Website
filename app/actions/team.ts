@@ -1,17 +1,13 @@
 'use server'
 
 import { prisma } from "@/lib/prisma"
-import { auth } from "@/auth"
+import { verifyAdmin } from "@/lib/auth-admin"
 import { revalidatePath } from "next/cache"
 
 export async function getTeamMembers() {
-    const session = await auth()
-    // if (!session?.user?.isAdmin) throw new Error("Unauthorized") // Public might need this too? No, this is for admin list.
-
     return await prisma.user.findMany({
         where: {
             role: 'DEVELOPER'
-            // OR has profile?
         },
         include: {
             profile: true
@@ -25,8 +21,8 @@ export async function getTeamMembers() {
 }
 
 export async function getTeamMember(id: string) {
-    const session = await auth()
-    if (!session?.user?.isAdmin) throw new Error("Unauthorized")
+    const admin = await verifyAdmin()
+    if (!admin) throw new Error("Unauthorized")
 
     return await prisma.user.findUnique({
         where: { id },
@@ -35,21 +31,20 @@ export async function getTeamMember(id: string) {
 }
 
 export async function createTeamMember(formData: FormData) {
-    const session = await auth()
-    if (!session?.user?.isAdmin) throw new Error("Unauthorized")
+    const admin = await verifyAdmin()
+    if (!admin) throw new Error("Unauthorized")
 
     const name = formData.get("name") as string
     const email = formData.get("email") as string
-    const role = formData.get("role") as string // Job Title ex: "Senior Engineer"
+    const role = formData.get("role") as string
     const bio = formData.get("bio") as string
-    const skills = (formData.get("skills") as string).split(',').map(s => s.trim())
+    const skills = (formData.get("skills") as string || "").split(',').map(s => s.trim())
 
-    // Create User + Profile
     try {
         await prisma.user.create({
             data: {
                 name,
-                email: email || undefined, // Email optional for display only members? unique constraint might fail if empty string
+                email: email || `${Date.now()}@temp.com`,
                 role: 'DEVELOPER',
                 profile: {
                     create: {
@@ -60,7 +55,7 @@ export async function createTeamMember(formData: FormData) {
                 }
             }
         })
-        revalidatePath('/admin/team')
+        revalidatePath('/team')
         return { success: true }
     } catch (error) {
         return { error: "Failed to create team member." }
@@ -68,15 +63,14 @@ export async function createTeamMember(formData: FormData) {
 }
 
 export async function updateTeamMember(id: string, formData: FormData) {
-    const session = await auth()
-    if (!session?.user?.isAdmin) throw new Error("Unauthorized")
+    const admin = await verifyAdmin()
+    if (!admin) throw new Error("Unauthorized")
 
     const name = formData.get("name") as string
     const title = formData.get("title") as string
     const bio = formData.get("bio") as string
-    const skills = (formData.get("skills") as string).split(',').map(s => s.trim())
+    const skills = (formData.get("skills") as string || "").split(',').map(s => s.trim())
 
-    // Update User + Profile
     try {
         await prisma.user.update({
             where: { id },
@@ -91,7 +85,7 @@ export async function updateTeamMember(id: string, formData: FormData) {
                 }
             }
         })
-        revalidatePath('/admin/team')
+        revalidatePath('/team')
         return { success: true }
     } catch (error) {
         return { error: "Failed to update team member." }
@@ -99,12 +93,12 @@ export async function updateTeamMember(id: string, formData: FormData) {
 }
 
 export async function deleteTeamMember(id: string) {
-    const session = await auth()
-    if (!session?.user?.isAdmin) throw new Error("Unauthorized")
+    const admin = await verifyAdmin()
+    if (!admin) throw new Error("Unauthorized")
 
     try {
         await prisma.user.delete({ where: { id } })
-        revalidatePath('/admin/team')
+        revalidatePath('/team')
         return { success: true }
     } catch (error) {
         return { error: "Failed to delete team member." }
@@ -112,11 +106,10 @@ export async function deleteTeamMember(id: string) {
 }
 
 export async function updateTeamOrder(items: { id: string, order: number }[]) {
-    const session = await auth()
-    if (!session?.user?.isAdmin) throw new Error("Unauthorized")
+    const admin = await verifyAdmin()
+    if (!admin) throw new Error("Unauthorized")
 
     try {
-        // Transaction to update all
         await prisma.$transaction(
             items.map(item =>
                 prisma.profile.update({
@@ -125,7 +118,7 @@ export async function updateTeamOrder(items: { id: string, order: number }[]) {
                 })
             )
         )
-        revalidatePath('/admin/team')
+        revalidatePath('/team')
         return { success: true }
     } catch (error) {
         return { error: "Failed to reorder." }

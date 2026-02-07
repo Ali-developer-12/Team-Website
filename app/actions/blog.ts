@@ -1,23 +1,23 @@
 'use server'
 
 import { prisma } from "@/lib/prisma"
-import { auth } from "@/auth"
+import { verifyAdmin } from "@/lib/auth-admin"
 import { revalidatePath } from "next/cache"
-import { PostStatus, Prisma } from "@prisma/client"
+import { PostStatus } from "@prisma/client"
 
 export async function getPosts() {
-    const session = await auth()
-    if (!session?.user?.isAdmin) throw new Error("Unauthorized")
+    const admin = await verifyAdmin()
+    if (!admin) throw new Error("Unauthorized")
 
     return await prisma.post.findMany({
         orderBy: { createdAt: 'desc' },
-        include: { author: true, category: true }
+        include: { adminAuthor: true, category: true }
     })
 }
 
 export async function getPost(id: string) {
-    const session = await auth()
-    if (!session?.user?.isAdmin) throw new Error("Unauthorized")
+    const admin = await verifyAdmin()
+    if (!admin) throw new Error("Unauthorized")
 
     return await prisma.post.findUnique({
         where: { id },
@@ -26,15 +26,14 @@ export async function getPost(id: string) {
 }
 
 export async function createPost(formData: FormData) {
-    const session = await auth()
-    if (!session?.user?.isAdmin) throw new Error("Unauthorized")
+    const admin = await verifyAdmin()
+    if (!admin) throw new Error("Unauthorized")
 
     const title = formData.get("title") as string
     const slug = formData.get("slug") as string
-    const content = formData.get("content") as string // HTML content
+    const content = formData.get("content") as string
     const status = formData.get("status") as PostStatus
 
-    // Create Post Logic
     try {
         const post = await prisma.post.create({
             data: {
@@ -42,21 +41,20 @@ export async function createPost(formData: FormData) {
                 slug,
                 content,
                 status: status || 'DRAFT',
-                adminAuthorId: session.user.id,
-                // authorId is optional now, we skip it
+                adminAuthorId: admin.id,
             }
         })
-        revalidatePath('/admin/blog')
+        revalidatePath('/blog')
         return { success: true, post }
     } catch (error) {
         console.error("Create Post Error:", error)
-        return { error: "Failed to create post. Slug must be unique." }
+        return { error: "Failed to create post." }
     }
 }
 
 export async function updatePost(id: string, formData: FormData) {
-    const session = await auth()
-    if (!session?.user?.isAdmin) throw new Error("Unauthorized")
+    const admin = await verifyAdmin()
+    if (!admin) throw new Error("Unauthorized")
 
     const title = formData.get("title") as string
     const slug = formData.get("slug") as string
@@ -73,8 +71,7 @@ export async function updatePost(id: string, formData: FormData) {
                 status
             }
         })
-        revalidatePath('/admin/blog')
-        revalidatePath(`/blog/${slug}`) // Revalidate public path if exists
+        revalidatePath(`/blog/${slug}`)
         return { success: true }
     } catch (error) {
         return { error: "Failed to update post." }
@@ -82,12 +79,12 @@ export async function updatePost(id: string, formData: FormData) {
 }
 
 export async function deletePost(id: string) {
-    const session = await auth()
-    if (!session?.user?.isAdmin) throw new Error("Unauthorized")
+    const admin = await verifyAdmin()
+    if (!admin) throw new Error("Unauthorized")
 
     try {
         await prisma.post.delete({ where: { id } })
-        revalidatePath('/admin/blog')
+        revalidatePath('/blog')
         return { success: true }
     } catch (error) {
         return { error: "Failed to delete post." }

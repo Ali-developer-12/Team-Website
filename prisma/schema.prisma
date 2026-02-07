@@ -76,50 +76,8 @@ model Session {
 
 // ... existing imports ...
 
-// User Roles & Enums
-enum AdminRole {
-  SUPER_ADMIN
-  CONTENT_ADMIN
-  TEAM_ADMIN
-}
+// Enums and models removed as they are replaced by the new Admin system at the end of this file.
 
-enum AdminStatus {
-  PENDING
-  ACTIVE
-  REJECTED
-  DEACTIVATED
-}
-
-// Admin User Model (Separate from Public Users)
-model AdminUser {
-  id                  String      @id @default(cuid())
-  username            String      @unique
-  email               String      @unique
-  passwordHash        String
-  role                AdminRole   @default(CONTENT_ADMIN)
-  status              AdminStatus @default(PENDING)
-  isApproved          Boolean     @default(false)
-  failedLoginAttempts Int         @default(0)
-  lockedUntil         DateTime?
-  
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
-
-  auditLogs           AdminAuditLog[]
-  posts               Post[]
-}
-
-// Admin Audit Log
-model AdminAuditLog {
-  id        String    @id @default(cuid())
-  action    String
-  resource  String
-  details   String?
-  ipAddress String?
-  adminId   String
-  admin     AdminUser @relation(fields: [adminId], references: [id])
-  timestamp DateTime  @default(now())
-}
 
 // Content Management - Blog
 model Category {
@@ -179,8 +137,8 @@ model Post {
   authorId       String?
   author         User?      @relation(fields: [authorId], references: [id])
   
-  adminAuthorId  String?
-  adminAuthor    AdminUser? @relation(fields: [adminAuthorId], references: [id])
+  adminAuthorId  Int?
+  adminAuthor    ApprovedAdmin? @relation(fields: [adminAuthorId], references: [id])
   
   categoryId     String?
   category       Category?  @relation(fields: [categoryId], references: [id])
@@ -191,7 +149,7 @@ model Post {
   updatedAt      DateTime   @updatedAt
 }
 
-// Updated Job Model
+// Job Model
 enum JobStatus {
   OPEN
   CLOSED
@@ -239,7 +197,7 @@ model Application {
   updatedAt   DateTime          @updatedAt
 }
 
-// Updated Profile (Team)
+// Profile (Team)
 model Profile {
   id          String   @id @default(cuid())
   userId      String   @unique
@@ -253,7 +211,7 @@ model Profile {
   skills      String[]
   isVerified  Boolean  @default(false)
   
-  displayOrder Int     @default(0) // For Drag & Drop ordering
+  displayOrder Int     @default(0)
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -270,3 +228,23 @@ model Contact {
   createdAt DateTime @default(now())
 }
 
+// SIMPLE ADMIN SYSTEM
+model ApprovedAdmin {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  approvedBy  String?  @map("approved_by")
+  approvedAt  DateTime @default(now()) @map("approved_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  posts       Post[]
+
+  @@map("approved_admins")
+}
+
+model PendingRequest {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  requestedAt DateTime @default(now()) @map("requested_at")
+
+  @@map("pending_requests")
+}
